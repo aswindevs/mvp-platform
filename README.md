@@ -26,8 +26,7 @@ Discover and visualize non-human AI agent identities by correlating runtime netw
 11. [Edge Case Handling](#edge-case-handling)
 12. [Design Decisions & Trade-offs](#design-decisions--trade-offs)
 13. [What Works](#what-works)
-14. [Known Limitations](#known-limitations)
-15. [Next Steps](#next-steps)
+
 
 ---
 
@@ -86,7 +85,7 @@ This pipeline answers those questions by correlating two data sources into a pro
 
 ```bash
 # Clone and enter the project
-cd graph
+cd mvp-platform
 
 # Start all services (db, backend, frontend)
 docker compose up -d --build
@@ -110,7 +109,7 @@ docker compose down -v
 ## Project Structure
 
 ```
-graph/
+mvp-platform/
 ├── docker-compose.yml              # Orchestrates all 4 services
 ├── README.md                       # This file
 ├── data/
@@ -484,28 +483,3 @@ The OTel Collector may compress payloads. The OTLP receiver detects gzip by chec
 - Docker Compose one-command setup
 
 ---
-
-## Known Limitations
-
-- No authentication or authorization on any endpoint
-- No real-time streaming (batch file replay only)
-- No graph visualization (tabular list + timeline views only)
-- No pagination on API responses
-- Cypher queries use string interpolation (not parameterized — internal-only tool)
-- AGE doesn't support `ON CREATE SET` / `ON MATCH SET` — workaround uses separate MERGE + conditional SET
-- Tool type classification is naive (hostname substring matching)
-- Frontend fetches full agent list on the detail page (no dedicated agent-by-id endpoint)
-
----
-
-## Next Steps
-
-- Add a force-directed graph visualization (D3 or Cytoscape) showing Identity→Agent→Tool relationships
-- Implement WebSocket push for live event streaming (replace batch replay)
-- Add authentication (OAuth2 / API keys) on all endpoints
-- Replace string-interpolated Cypher with AGE's parameter binding where supported
-- Add alerting on new unverified agents (Identity nodes with `verified=false`)
-- Support additional event sources beyond AWS (GCP Service Accounts, Azure Managed Identities)
-- Add a dedicated `GET /api/agents/{id}` endpoint to avoid fetching the full list on detail pages
-- Implement pagination and filtering on the agent list
-- Add integration tests that run the full pipeline in CI
