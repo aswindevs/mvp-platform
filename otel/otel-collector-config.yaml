@@ -1,0 +1,50 @@
+receivers:
+  filelog/runtime:
+    include: [/data/runtime_events.jsonl]
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_to: attributes
+
+  filelog/inventory:
+    include: [/data/cloud_inventory.jsonl]
+    start_at: beginning
+    operators:
+      - type: json_parser
+        parse_to: attributes
+
+processors:
+  transform/runtime:
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["source"], "runtime")
+          - set(attributes["tool_destination"], attributes["sni"])
+          - set(attributes["timestamp"], attributes["ts"])
+          - set(attributes["agent_id"], Concat([attributes["nhi_id"], attributes["workload_id"]], "::"))
+
+  transform/inventory:
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["source"], "inventory")
+          - set(attributes["nhi_id"], attributes["iam_role_arn"])
+          - set(attributes["timestamp"], attributes["snapshot_ts"])
+
+exporters:
+  otlphttp:
+    endpoint: http://backend:8000
+    encoding: json
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    logs/runtime:
+      receivers: [filelog/runtime]
+      processors: [transform/runtime]
+      exporters: [otlphttp]
+    logs/inventory:
+      receivers: [filelog/inventory]
+      processors: [transform/inventory]
+      exporters: [otlphttp]
